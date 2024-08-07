@@ -1,26 +1,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
 Resources:
+
+  # Configure VPC and attach an internet gateway
   VPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
-
   InternetGateway:
     Type: AWS::EC2::InternetGateway
-    Properties:
-      Tags:
-        - Key: Name
-          Value: SpiceStreamIGW
-
   VPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
+  # Configure public subnets and route tables
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -28,7 +25,6 @@ Resources:
       CidrBlock: 10.0.1.0/25
       MapPublicIpOnLaunch: true
       AvailabilityZone: "us-east-1a"
-
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -36,7 +32,28 @@ Resources:
       CidrBlock: 10.0.1.128/25
       MapPublicIpOnLaunch: true
       AvailabilityZone: "us-east-1b"
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
 
+  # Configure private subnets and route table/NAT gateway
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -44,7 +61,6 @@ Resources:
       CidrBlock: 10.0.2.0/25
       MapPublicIpOnLaunch: false
       AvailabilityZone: "us-east-1a"
-
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -52,34 +68,37 @@ Resources:
       CidrBlock: 10.0.2.128/25
       MapPublicIpOnLaunch: false
       AvailabilityZone: "us-east-1b"
-
-  RouteTable:
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+  NATGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: SpiceStreamRouteTable
-
-  PublicRoute:
+  NATGatewayRoute:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref RouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-
-  SubnetRouteTableAssociation1:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NATGateway
+  PrivateSubnetRouteTableAssociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PublicSubnet1
-      RouteTableId: !Ref RouteTable
-
-  SubnetRouteTableAssociation2:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+  PrivateSubnetRouteTableAssociation2:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PublicSubnet2
-      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
 
+  # Configure security groups
   FrontendSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -98,29 +117,38 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Allow traffic from AppLoadBalancer
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Allow traffic from backend
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref BackendSecurityGroup
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: ALB security group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
 
-  # BackendSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     GroupDescription: Allow traffic from ALB
-  #     SecurityGroupIngress:
-  #       - IpProtocol: tcp
-  #         FromPort: 80
-  #         ToPort: 80
-  #         SourceSecurityGroupId: !Ref ALBSecurityGroup
-
-  # DatabaseSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     GroupDescription: Allow traffic from backend
-  #     SecurityGroupIngress:
-  #       - IpProtocol: tcp
-  #         FromPort: 3306
-  #         ToPort: 3306
-  #         SourceSecurityGroupId: !Ref BackendSecurityGroup
-
+  # Configure EC2 instance to host the front-end
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
@@ -130,143 +158,127 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       ImageId: ami-0ae8f15ae66fe8cda
       UserData:
-        !Base64 |
-          #!/bin/bash
-          sudo yum update -y
-          sudo yum install docker -y
-          sudo service docker start
-          sudo usermod -a -G docker ec2-user
-          sudo docker pull evancestnick/spice-stream-frontend
-          sudo docker run -d -p 80:80 evancestnick/spice-stream-frontend
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            sudo yum update -y
+            sudo yum install docker -y
+            sudo service docker start
+            sudo usermod -a -G docker ec2-user
+            sudo docker pull evancestnick/spice-stream-frontend
+            sudo docker run -d -p 80:80 -e REACT_APP_BACKEND_URI=http://${AppLoadBalancer.DNSName} evancestnick/spice-stream-frontend
 
-#   ECSCluster:
-#     Type: AWS::ECS::Cluster
-#     Properties:
-#       ClusterName: SpiceStreamCluster
+  # Configure an ECS cluster to host the back-end
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: SpiceStreamCluster
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: spice-stream-backend
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: "256"
+      Memory: "512"
+      ContainerDefinitions:
+        - Name: spice-stream-backend
+          Image: evancestnick/spice-stream-backend
+          PortMappings:
+            - ContainerPort: 8080
+              HostPort: 8080
+              Protocol: tcp
+          Environment:
+            - Name: ASPNETCORE_ENVIRONMENT
+              Value: Production
+            - Name: ConnectionStrings__DefaultConnection
+              Value: !Sub 'server=${RDSInstance.Endpoint.Address};port=3306;database=spice_stream_db;user=${DBUser};password=${DBPassword};'
+  ECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref ECSTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - !Ref BackendSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+      LoadBalancers:
+        - TargetGroupArn: !Ref TargetGroup
+          ContainerName: spice-stream-backend
+          ContainerPort: 8080
 
-#   ECSTaskDefinition:
-#     Type: AWS::ECS::TaskDefinition
-#     Properties:
-#       Family: SpiceStreamTask
-#       NetworkMode: awsvpc
-#       RequiresCompatibilities:
-#         - FARGATE
-#       Cpu: "256"
-#       Memory: "512"
-#       ContainerDefinitions:
-#         - Name: backend
-#           Image: evancestnick/spice-stream-backend
-#           PortMappings:
-#             - ContainerPort: 80
-#           Environment:
-#             - Name: ASPNETCORE_ENVIRONMENT
-#               Value: Production
-#             - Name: ConnectionStrings__DefaultConnection
-#               Value: !Sub 'server=${RDSInstance.Endpoint.Address};port=3306;database=spice_stream_db;user=${DBUser};password=${DBPassword};'
-#           LogConfiguration:
-#             LogDriver: awslogs
-#             Options:
-#               awslogs-group: /ecs/SpiceStream
-#               awslogs-region: !Ref AWS::Region
-#               awslogs-stream-prefix: ecs
+  # Configure an application load balancer to route requests to the back-end containers
+  AppLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: SpiceStreamALB
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Scheme: internet-facing
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /health
+      Name: SpiceStreamTG
+      VpcId: !Ref VPC
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      Matcher:
+        HttpCode: 200-299
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref AppLoadBalancer
+      Port: 80
+      Protocol: HTTP
 
-#   ECSService:
-#     Type: AWS::ECS::Service
-#     Properties:
-#       Cluster: !Ref ECSCluster
-#       DesiredCount: 1
-#       LaunchType: FARGATE
-#       NetworkConfiguration:
-#         AwsvpcConfiguration:
-#           AssignPublicIp: ENABLED
-#           SecurityGroups:
-#             - !Ref BackendSecurityGroup
-#           Subnets:
-#             - !Ref PrivateSubnet1
-#             - !Ref PrivateSubnet2
-#       TaskDefinition: !Ref ECSTaskDefinition
-#       LoadBalancers:
-#         - TargetGroupArn: !Ref TargetGroup
-#           ContainerName: backend
-#           ContainerPort: 80
+  # Configure the database that is used by the backend
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: SpiceStreamDB
+      AllocatedStorage: "20"
+      DBInstanceClass: db.t3.micro
+      Engine: mysql
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      VPCSecurityGroups:
+        - !Ref DatabaseSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets for RDS
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
 
-#   ALB:
-#     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-#     Properties:
-#       Name: SpiceStreamALB
-#       Subnets:
-#         - !Ref PublicSubnet1
-#         - !Ref PublicSubnet2
-#       SecurityGroups:
-#         - !Ref ALBSecurityGroup
-#       Scheme: internet-facing
+  # Create a secret to hold the database credentials
+  Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: DBPassword
+      Description: Database password
+      SecretString: !Ref DBPassword
 
-#   ALBSecurityGroup:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       VpcId: !Ref VPC
-#       GroupDescription: ALB security group
-#       SecurityGroupIngress:
-#         - IpProtocol: tcp
-#           FromPort: 80
-#           ToPort: 80
-#           CidrIp: 0.0.0.0/0
-
-#   TargetGroup:
-#     Type: AWS::ElasticLoadBalancingV2::TargetGroup
-#     Properties:
-#       Name: SpiceStreamTG
-#       VpcId: !Ref VPC
-#       Port: 80
-#       Protocol: HTTP
-#       TargetType: ip
-#       HealthCheckPath: /
-#       Matcher:
-#         HttpCode: 200-299
-
-#   Listener:
-#     Type: AWS::ElasticLoadBalancingV2::Listener
-#     Properties:
-#       DefaultActions:
-#         - Type: forward
-#           TargetGroupArn: !Ref TargetGroup
-#       LoadBalancerArn: !Ref ALB
-#       Port: 80
-#       Protocol: HTTP
-
-#   RDSInstance:
-#     Type: AWS::RDS::DBInstance
-#     Properties:
-#       DBInstanceIdentifier: SpiceStreamDB
-#       AllocatedStorage: "20"
-#       DBInstanceClass: db.t3.micro
-#       Engine: mysql
-#       MasterUsername: !Ref DBUser
-#       MasterUserPassword: !Ref DBPassword
-#       VPCSecurityGroups:
-#         - !Ref DatabaseSecurityGroup
-#       DBSubnetGroupName: !Ref DBSubnetGroup
-#       PubliclyAccessible: false
-
-#   DBSubnetGroup:
-#     Type: AWS::RDS::DBSubnetGroup
-#     Properties:
-#       DBSubnetGroupDescription: Subnets for RDS
-#       SubnetIds:
-#         - !Ref PrivateSubnet1
-#         - !Ref PrivateSubnet2
-
-#   Secret:
-#     Type: AWS::SecretsManager::Secret
-#     Properties:
-#       Name: DBPassword
-#       Description: Database password
-#       SecretString: !Ref DBPassword
-
-# Parameters:
-#   DBUser:
-#     Type: String
-#     Default: admin
-#   DBPassword:
-#     Type: String
-#     NoEcho: true
+Parameters:
+  DBUser:
+    Type: String
+    Default: admin
+  DBPassword:
+    Type: String
+    NoEcho: true

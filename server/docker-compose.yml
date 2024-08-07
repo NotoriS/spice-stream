@@ -5,6 +5,8 @@
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      ConnectionStrings__DefaultConnection: "server=host.docker.internal;port=3306;database=spice_stream_db;user=root;password=admin"
     ports:
       - "8080:8080"
       - "8081:8081"
