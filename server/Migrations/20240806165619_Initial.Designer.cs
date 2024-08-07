@@ -11,7 +11,7 @@ using server.Database;
 namespace server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240806013909_Initial")]
+    [Migration("20240806165619_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -148,6 +148,20 @@ namespace server.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("server.Database.Dummy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Dummies");
                 });
 
             modelBuilder.Entity("server.Database.User", b =>

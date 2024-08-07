@@ -1,0 +1,11 @@
+services:
+  client:
+    image: evancestnick/spice-stream-frontend
+    container_name: spice-stream-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      REACT_APP_BACKEND_URI: http://localhost:8080

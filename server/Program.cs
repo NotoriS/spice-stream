@@ -5,6 +5,16 @@ using server.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAnyOrigin", policyBuilder =>
+    {
+        policyBuilder.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -37,5 +47,7 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 app.MapIdentityApi<User>();
+
+app.UseCors("AllowAnyOrigin");
 
 app.Run();
