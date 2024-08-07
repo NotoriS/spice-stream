@@ -193,13 +193,13 @@ Resources:
             - Name: ASPNETCORE_ENVIRONMENT
               Value: Production
             - Name: ConnectionStrings__DefaultConnection
-              Value: !Sub 'server=${RDSInstance.Endpoint.Address};port=3306;database=spice_stream_db;user=${DBUser};password=${DBPassword};'
+              Value: !Sub 'server=${RDSInstance.Endpoint.Address};port=3306;database=spice_stream_db;user={{resolve:secretsmanager:${DBSecret}::username}};password={{resolve:secretsmanager:${DBSecret}::password}};'
   ECSService:
     Type: AWS::ECS::Service
     Properties:
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref ECSTaskDefinition
-      DesiredCount: 1
+      DesiredCount: 2
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -253,8 +253,8 @@ Resources:
       AllocatedStorage: "20"
       DBInstanceClass: db.t3.micro
       Engine: mysql
-      MasterUsername: !Ref DBUser
-      MasterUserPassword: !Ref DBPassword
+      MasterUsername: !Sub '{{resolve:secretsmanager:${DBSecret}::username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DBSecret}::password}}'
       VPCSecurityGroups:
         - !Ref DatabaseSecurityGroup
       DBSubnetGroupName: !Ref DBSubnetGroup
@@ -268,17 +268,18 @@ Resources:
         - !Ref PrivateSubnet2
 
   # Create a secret to hold the database credentials
-  Secret:
+  DBSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: DBPassword
-      Description: Database password
-      SecretString: !Ref DBPassword
+      Name: DBCredentials
+      Description: 'Database credentials for SpiceStream'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludePunctuation: true
 
-Parameters:
-  DBUser:
-    Type: String
-    Default: admin
-  DBPassword:
-    Type: String
-    NoEcho: true
+Outputs:
+  WebAppURL:
+    Description: 'URL for the WebApp front-end'
+    Value: !Sub "http://${EC2Instance.PublicDnsName}"
