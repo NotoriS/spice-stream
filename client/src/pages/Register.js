@@ -1,11 +1,15 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { register } from '../utils/api-calls'
+import { Link, useOutletContext, useNavigate } from 'react-router-dom'
+import { register, login } from '../utils/api-calls'
 
 function Register() {
 
     const [registrationError, setRegistrationError] = useState('')
     const [registrationInProgress, setRegistrationInProgress] = useState(false)
+
+    const [{setLoggedIn}] = useOutletContext()
+
+    const navigate = useNavigate()
 
     const onRegister = async (e) => {
         e.preventDefault()
@@ -59,10 +63,17 @@ function Register() {
         setRegistrationError('')
 
         setRegistrationInProgress(true)
-        await register(email, password, setRegistrationError)
-        if (registrationError === '') {
-            // TODO: Login
+
+        try {
+            await register(email, password)
+            await login(email, password)
+            setLoggedIn(true)
+            navigate('/recipes')
+        } catch (error) {
+            console.log(error)
+            setRegistrationError('An error occured: ' + error.message)
         }
+
         setRegistrationInProgress(false)
     }
 

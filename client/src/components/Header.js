@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import spiceStreamIcon from '../images/spice-stream-icon.webp'
 
-function Header() {
+function Header({ loggedIn }) {
     const [navExpanded, setNavExpanded] = useState(false)
     const navigate = useNavigate()
 
@@ -14,7 +14,11 @@ function Header() {
                     <span className="self-center text-red-600 text-3xl font-semibold whitespace-nowrap">SpiceStream</span>
                 </NavLink>
                 <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-                    <button onClick={() => navigate('/login')} className="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-400 font-medium rounded-lg text-sm px-4 py-2 text-center">Login</button>
+                    {
+                        loggedIn ?
+                        <button className="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-400 font-medium rounded-lg text-sm px-4 py-2 text-center">Logout</button> :
+                        <button onClick={() => navigate('/login')} className="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-400 font-medium rounded-lg text-sm px-4 py-2 text-center">Login</button>
+                    }
                     <button onClick={() => setNavExpanded(!navExpanded)} data-collapse-toggle="navbar-sticky" type="button" className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-yellow-800 rounded-lg md:hidden hover:bg-yellow-100 focus:outline-none focus:ring-4 focus:ring-yellow-100" aria-controls="navbar-sticky" aria-expanded="false">
                         <span className="sr-only">Open main menu</span>
                         <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">

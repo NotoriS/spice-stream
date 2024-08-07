@@ -25,16 +25,22 @@ export async function getDummies() {
     }
 }
 
-export async function register(email, password, setErrorText) {
-    try {
-        await backend.post('/register', {
-            email,
-            password
-        })
-    } catch (error) {
-        console.log(error)
-        setErrorText('An error occured: ' + error.message)
-    }
+export async function register(email, password) {
+    await backend.post('/register', {
+        email,
+        password
+    })
+}
+
+export async function login(email, password) {
+    await backend.post('/login?useCookies=true&useSessionCookies=true', {
+        email,
+        password
+    })
+}
+
+export async function authActive(email, password) {
+    await backend.get('/auth/active')
 }
 
 export default backend
