@@ -25,4 +25,16 @@ export async function getDummies() {
     }
 }
 
+export async function register(email, password, setErrorText) {
+    try {
+        await backend.post('/register', {
+            email,
+            password
+        })
+    } catch (error) {
+        console.log(error)
+        setErrorText('An error occured: ' + error.message)
+    }
+}
+
 export default backend
