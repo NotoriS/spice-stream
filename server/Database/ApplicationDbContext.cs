@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace server.Database;
 
-public class ApplicationDbContext : IdentityDbContext<User>
+public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
+    public ApplicationDbContext(DbContextOptions options) 
         : base(options)
     {
     }
 
-    public DbSet<Dummy> Dummies { get; set; }
+    public DbSet<Recipe> Recipes { get; set; }
+    public DbSet<Ingredient> Ingredients { get; set; }
+    public DbSet<Step> Steps { get; set; }
 }

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using server.Database;
 using server.Utils;
@@ -19,13 +18,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddAuthorization();
-builder.Services.AddAuthentication().AddCookie(IdentityConstants.ApplicationScheme);
-
-builder.Services.AddIdentityCore<User>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddApiEndpoints();
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -45,9 +37,8 @@ app.ApplyMigrations();
 
 app.UseHttpsRedirection();
 
-app.MapControllers();
-app.MapIdentityApi<User>();
-
 app.UseCors("AllowAnyOrigin");
+
+app.MapControllers();
 
 app.Run();
