@@ -19,6 +19,7 @@ public class RecipeController : ControllerBase
     public async Task<IActionResult> GetAll()
     { 
         List<Recipe> recipes = await _context.Recipes
+            .OrderByDescending(p => p.CreatedAt)
             .Include(r => r.Ingredients)
             .Include(r => r.Steps)
             .ToListAsync();
@@ -28,6 +29,7 @@ public class RecipeController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateRecipe([FromBody] Recipe recipe)
     {
+        recipe.CreatedAt = DateTime.Now;
         await _context.Recipes.AddAsync(recipe);
         await _context.SaveChangesAsync();
         return Created();

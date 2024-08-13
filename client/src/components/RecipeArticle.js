@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { formatBackendDate } from "../utils/formatting";
 
 const RecipeArticle = ({ recipe, closeRecipeArticle }) => {
 
@@ -22,7 +23,7 @@ const RecipeArticle = ({ recipe, closeRecipeArticle }) => {
                 <h1 className="text-4xl font-bold text-red-600">{recipe.title}</h1>
                 <button onClick={() => closeRecipeArticle()} className=" rounded text-xl hover:bg-neutral-100 py-1 px-3">X</button>
             </div>
-            <p className="text-gray-300 mt-1">2024-08-12 9:05 PM</p>
+            <p className="text-gray-300 mt-1">{formatBackendDate(recipe.createdAt)}</p>
             <p>{recipe.description}</p>
         </div>
     );
