@@ -37,12 +37,12 @@ const RecipeArticle = ({ recipe, closeRecipeArticle }) => {
     })
 
     return (
-        <div className="bg-white p-5 border-b border-gray-100">
+        <div className="bg-white p-5 md:border-b border-gray-100">
             <div className="flex flex-row justify-between items-center">
                 <h1 className="text-4xl font-bold text-red-600">{recipe.title}</h1>
                 <button onClick={() => closeRecipeArticle()} className=" rounded text-xl hover:bg-neutral-100 py-1 px-3">X</button>
             </div>
-            <p className="text-gray-300 mt-">{formatBackendDate(recipe.createdAt)}</p>
+            <p className="text-gray-300 mt-1">{formatBackendDate(recipe.createdAt)}</p>
             <p className="mt-1">{recipe.description}</p>
             <div>
                 <h2 className="text-3xl font-bold text-red-600 mt-5">Ingredients</h2>

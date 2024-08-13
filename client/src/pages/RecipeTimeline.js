@@ -9,7 +9,11 @@ function RecipeTimeline() {
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      setRecipeList(await getAllRecipes())
+      try {
+        setRecipeList(await getAllRecipes())
+      } catch (error) {
+        console.error(error)
+      }
     }
     fetchRecipes()
   }, [])
@@ -25,8 +29,8 @@ function RecipeTimeline() {
   const recipeCardMap = recipeList.map((recipe, index) => <RecipeCard key={index} recipe={recipe} index={index} openRecipeArticle={openRecipeArticle} />)
 
   return (
-    <div className='h-full max-w-screen-xl mx-auto md:px-4'>
-      <div className='md:border-x border-gray-100 mb-2'>
+    <div className='max-w-screen-xl mx-auto md:px-4'>
+      <div className='md:border-t md:border-x md:mt-2 border-gray-100 mb-2'>
         {
           recipeArticleOpenId < 0
           ?

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from './pages/Layout'
 import Home from './pages/Home'
 import RecipeTimeline from './pages/RecipeTimeline'
+import NewRecipe from "./pages/NewRecipe";
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
                     <Route index element={<Home />} />
                     <Route path="home" element={<Home />} />
                     <Route path="recipes" element={<RecipeTimeline />} />
+                    <Route path="create" element={<NewRecipe />} />
                     <Route path="*" element={<NotFound />} />
                 </Route>
             </Routes>

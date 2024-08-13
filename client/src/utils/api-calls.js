@@ -13,4 +13,8 @@ export async function getAllRecipes() {
     return response.data
 }
 
+export async function postNewRecipe(recipe) {
+    await backend.post('/recipes', recipe)
+}
+
 export default backend
