@@ -25,6 +25,9 @@ namespace server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int>("IngredientNumber")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -76,6 +79,9 @@ namespace server.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<int?>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StepNumber")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")

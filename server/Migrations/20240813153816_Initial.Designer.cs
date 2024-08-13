@@ -11,7 +11,7 @@ using server.Database;
 namespace server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240813013120_Initial")]
+    [Migration("20240813153816_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -26,6 +26,9 @@ namespace server.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("IngredientNumber")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -79,6 +82,9 @@ namespace server.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<int?>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StepNumber")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")

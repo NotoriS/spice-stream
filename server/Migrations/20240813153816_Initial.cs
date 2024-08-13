@@ -37,6 +37,7 @@ namespace server.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    IngredientNumber = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "longtext", nullable: false),
                     Quantity = table.Column<string>(type: "longtext", nullable: false),
                     RecipeId = table.Column<int>(type: "int", nullable: true)
@@ -58,6 +59,7 @@ namespace server.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    StepNumber = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "longtext", nullable: false),
                     Body = table.Column<string>(type: "longtext", nullable: false),
                     RecipeId = table.Column<int>(type: "int", nullable: true)
