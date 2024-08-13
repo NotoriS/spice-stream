@@ -26,7 +26,7 @@ function RecipeTimeline() {
 
   return (
     <div className='h-full max-w-screen-xl mx-auto md:px-4'>
-      <div className='md:border-x border-gray-100'>
+      <div className='md:border-x border-gray-100 mb-2'>
         {
           recipeArticleOpenId < 0
           ?
@@ -37,7 +37,7 @@ function RecipeTimeline() {
           <RecipeArticle recipe={recipeList[recipeArticleOpenId]} closeRecipeArticle={closeRecipeArticle} />
         }
       </div>
-      {recipeArticleOpenId < 0 && <p className='text-center text-gray-300 mt-2 mb-5'>You've reached the end!</p>}
+      {recipeArticleOpenId < 0 && <p className='text-center text-gray-300 mb-5'>You've reached the end!</p>}
     </div>
   )
 }
